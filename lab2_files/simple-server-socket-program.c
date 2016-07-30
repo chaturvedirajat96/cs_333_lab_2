@@ -4,6 +4,7 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 void error(char *msg)
 {
@@ -42,27 +43,33 @@ int main(int argc, char *argv[])
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
      
-     /* listen for incoming connection requests */
+     while(true)
+     {
+	     /* listen for incoming connection requests */
 
-     listen(sockfd,5);
-     clilen = sizeof(cli_addr);
+	     listen(sockfd,5);
+	     clilen = sizeof(cli_addr);
 
-     /* accept a new request, create a newsockfd */
+	     /* accept a new request, create a newsockfd */
 
-     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-     if (newsockfd < 0) 
-          error("ERROR on accept");
+	     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+	     if (newsockfd < 0) 
+	          error("ERROR on accept");
+	      int ret = fork();
+	      if(ret==0)
+	      {
+	      	/* read message from client */
 
-     /* read message from client */
+		     bzero(buffer,256);
+		     n = read(newsockfd,buffer,255);
+		     if (n < 0) error("ERROR reading from socket");
+		     printf("Here is the message: %s\n",buffer);
 
-     bzero(buffer,256);
-     n = read(newsockfd,buffer,255);
-     if (n < 0) error("ERROR reading from socket");
-     printf("Here is the message: %s\n",buffer);
+		     /* send reply to client */
 
-     /* send reply to client */
-
-     n = write(newsockfd,"I got your message",18);
-     if (n < 0) error("ERROR writing to socket");
+		     n = write(newsockfd,"I got your message",18);
+		     if (n < 0) error("ERROR writing to socket");
+	      }
+	  }
      return 0; 
 }
