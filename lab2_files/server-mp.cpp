@@ -14,9 +14,9 @@
 
 using namespace std;
 
-void error(char *msg)
+void error(string msg)
 {
-	perror(msg);
+	perror(msg.c_str());
 	exit(1);
 }
 
