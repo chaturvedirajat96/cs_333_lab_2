@@ -30,35 +30,36 @@ void *client(void *attr_)
 	client_attr *attr = (client_attr *)attr_;
 	int sock_fd;
 	//open socket
-	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
-		pthread_exit((void *)-1);
-	//connect to server
+	     
+  //Read and Write to Socket
+  int b_size = 1024;
+  char buffer[b_size];
+  int num_b, file_n;
+  time_t start_t = time(NULL),curr_t = time(NULL);
+  while(attr->duration> (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000) )
+  {	
+  	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
+    pthread_exit((void *)-1);
+    //connect to server
     if (connect(sock_fd,(struct sockaddr *)&attr->server_addr,sizeof(attr->server_addr)) < 0) 
-    	pthread_exit((void *)-1);
-       
-    //Read and Write to Socket
-    int b_size = 1024;
-    char buffer[b_size];
-    int num_b, file_n;
-    time_t start_t = time(NULL),curr_t = time(NULL);
-    while(attr->duration> (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000) )
-    {	
-    	if(attr->mode){file_n = rand()%MAX_FILE_NO;}
-    	else file_n=0;
-    	//Send Request
-    	sprintf(buffer, "get files/foo%d.txt",file_n);
-    	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
-    		fprintf(stderr, "Error Writing to Socket");
-      	bzero(buffer,b_size);
+    pthread_exit((void *)-1);
+  
+    if(attr->mode){file_n = rand()%MAX_FILE_NO;}
+  	else file_n=0;
+  	//Send Request
+  	sprintf(buffer, "get files/foo%d.txt",file_n);
+  	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
+  		fprintf(stderr, "Error Writing to Socket");
+    	bzero(buffer,b_size);
 
-    	//Receive File
-    	int received_size;
-    	while((received_size = recv(sock_fd, buffer, 1024, 0))>0){
- 			//Discard recieved data
- 			bzero(buffer, b_size);
-    	}
-    	sleep(attr->sleep_time);
-    	curr_t = time(NULL);
+  	//Receive File
+  	int received_size;
+  	while((received_size = recv(sock_fd, buffer, 1024, 0))>0){
+			//Discard recieved data
+			bzero(buffer, b_size);
+  	}
+  	sleep(attr->sleep_time);
+  	curr_t = time(NULL);
     }
     pthread_exit((void *)0);
 
@@ -66,9 +67,8 @@ void *client(void *attr_)
 }
 /* fill in server address in sockaddr_in datastructure */
 
-struct sockaddr_in set_server(struct hostent *server, int &port_no)
+struct sockaddr_in set_server(struct sockaddr_in &server_addr, struct hostent *server, int &port_no)
 {
-	struct sockaddr_in server_addr;
 	bzero((char *) &server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
         exit(0);
     }
     //setup server
-    attr.server_addr = set_server(server, port_no);
+    set_server(attr.server_addr, server, port_no);
    
    	//Create Threads
    	pthread_t threads[num_of_threads];

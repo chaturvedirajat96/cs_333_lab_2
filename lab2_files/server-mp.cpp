@@ -1,12 +1,12 @@
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
+#include <cstdlib>
 #include <stdio.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
-#include <cstdlib>
-#include <string>
+#include <string.h>
 #include <unistd.h>
 
 void error(char *msg)
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
 	 /* fill in port number to listen on. IP address can be anything (INADDR_ANY) */
 
-	 bzero((char *) &serv_addr, sizeof(serv_addr));
+	 bzero( (char *) &serv_addr, sizeof(serv_addr));
 	 portno = atoi(argv[1]);
 	 serv_addr.sin_family = AF_INET;
 	 serv_addr.sin_addr.s_addr = INADDR_ANY;
