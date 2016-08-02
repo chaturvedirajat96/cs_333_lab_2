@@ -62,8 +62,8 @@ void *client(void *attr_)
   	while((received_size=read(sock_fd, buffer, 1023)>0)){
 			//Discard recieved data		
   	}
-  	cout<<"File Received\n";
-  	usleep(attr->sleep_time*1000);
+  	std::cout<<"File Received\n";
+  	sleep(attr->sleep_time);
   	curr_t = time(NULL);
     diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
     close(sock_fd);
