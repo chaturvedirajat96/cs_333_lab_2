@@ -80,8 +80,9 @@ int main(int argc, char *argv[])
 			 string filename = "";
 			 for(;i<255;i++) {if(buffer[i]=='.') break; filename+=buffer[i];}
 			 filename+=".txt";cout<<filename<<endl;
-			 ifstream file (filename, ios::in);
-			 if(file<0) {error("File not found");}
+			 ifstream file;
+			 file.open(filename, ios::in);
+			 if(file) {error("File not found");}
 
 			 int length = 255;
 			 char * buffer2 = new char [length];
@@ -93,6 +94,7 @@ int main(int argc, char *argv[])
 			 	n = write(newsockfd,buffer2,255);
 				if (n < 0) {error("ERROR writing to socket");break;}
 			 }
+			 file.close();
 			 close(newsockfd);
 			 return 0;
 
