@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <iostream>
 
 #define MAX_FILE_NO 10000;
 void error(char *msg)
@@ -34,9 +35,10 @@ void *client(void *attr_)
   //Read and Write to Socket
   int b_size = 1024;
   char buffer[b_size];
-  int num_b, file_n;
+  int num_b, diff_time, file_n;
   time_t start_t = time(NULL),curr_t = time(NULL);
-  while(attr->duration> (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000) )
+  diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
+  while(attr->duration > diff_time )
   {	
   	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
     pthread_exit((void *)-1);
@@ -53,13 +55,15 @@ void *client(void *attr_)
     	bzero(buffer,b_size);
 
   	//Receive File
-  	int received_size;
-  	while((received_size = recv(sock_fd, buffer, 1024, 0))>0){
-			//Discard recieved data
-			bzero(buffer, b_size);
+  	while((read(sock_fd, buffer, 1023)>0)){
+			//Discard recieved data		
   	}
-  	sleep(attr->sleep_time);
+
+  	usleep(attr->sleep_time*1000);
+  	std::cout<<"Next\n";
   	curr_t = time(NULL);
+    diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
+    std::cout<<diff_time<<"\n";
     close(sock_fd);
   }
   pthread_exit((void *)0);

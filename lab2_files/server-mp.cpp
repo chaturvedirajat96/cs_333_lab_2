@@ -79,22 +79,22 @@ int main(int argc, char *argv[])
 			 i++;
 			 string filename = "";
 			 for(;i<255;i++) {if(buffer[i]=='.') break; filename+=buffer[i];}
-			 filename+=".txt";cout<<filename<<endl;
-			 ifstream file;
-			 file.open(filename, ios::in);
-			 if(file) {error("File not found");}
+			 filename+=".txt";
+			 cout<<filename<<endl;
+			 ifstream file (filename.c_str(), ios::in);
+			 if(file<0) {error("File not found");}
 
-			 int length = 255;
+			 int length = 1024;
 			 char * buffer2 = new char [length];
 
 			 /* send reply to client */
-			 while(file)
+			 while(!file.eof())
 			 {
-			 	file.read(buffer2,length);
-			 	n = write(newsockfd,buffer2,255);
+			 	file.read(buffer2,length-1);
+			 	n = write(newsockfd,buffer2,strlen(buffer2));
 				if (n < 0) {error("ERROR writing to socket");break;}
 			 }
-			 file.close();
+
 			 close(newsockfd);
 			 return 0;
 
@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
 		  else
 		  {
 		  	int status;
-		  	while(waitpid(-1,&status,WNOHANG));
+		  	
+		  	while(waitpid(-1,&status,WNOHANG)){std::cout<<status<<endl;}
 		  }
 	  }
 	 return 0; 
