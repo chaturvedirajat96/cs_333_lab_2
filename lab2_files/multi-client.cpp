@@ -40,6 +40,8 @@ void *client(void *attr_)
   diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
   while(attr->duration > diff_time )
   {	
+
+
   	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
     pthread_exit((void *)-1);
     //connect to server
@@ -52,18 +54,18 @@ void *client(void *attr_)
   	sprintf(buffer, "get files/foo%d.txt",file_n);
   	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
   		fprintf(stderr, "Error Writing to Socket");
-    	bzero(buffer,b_size);
+    else std::cout<<"Get Request Sent to Server\n";
+    bzero(buffer,b_size);
 
-  	//Receive File
-  	while((read(sock_fd, buffer, 1023)>0)){
+    int received_size;
+	//Receive File
+  	while((received_size=read(sock_fd, buffer, 1023)>0)){
 			//Discard recieved data		
   	}
-
+  	cout<<"File Received\n";
   	usleep(attr->sleep_time*1000);
-  	std::cout<<"Next\n";
   	curr_t = time(NULL);
     diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
-    std::cout<<diff_time<<"\n";
     close(sock_fd);
   }
   pthread_exit((void *)0);

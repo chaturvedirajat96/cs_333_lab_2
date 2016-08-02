@@ -61,14 +61,14 @@ int main(int argc, char *argv[])
 
 		 /* accept a new request, create a newsockfd */
 
-		 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+		 
 		 if (newsockfd < 0) 
 			  error("ERROR on accept");
 		  int ret = fork();
 		  if(ret==0)
 		  {
 			/* read message from client */
-
+		  	 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 			 bzero(buffer,256);
 			 n = read(newsockfd,buffer,255);
 			 if (n < 0) error("ERROR reading from socket");
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 			 	n = write(newsockfd,buffer2,strlen(buffer2));
 				if (n < 0) {error("ERROR writing to socket");break;}
 			 }
-
+			 std::cout<<"File Transfer Completed\n";
 			 close(newsockfd);
 			 return 0;
 
