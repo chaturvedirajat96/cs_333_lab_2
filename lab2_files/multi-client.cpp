@@ -46,11 +46,10 @@ void *client(void *attr_)
     	if(attr->mode){file_n = rand()%MAX_FILE_NO;}
     	else file_n=0;
     	//Send Request
-    	sscanf(buffer, "get files/foo%d.txt",&file_n);
-    	
-    	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0);
+    	sprintf(buffer, "get files/foo%d.txt",file_n);
+    	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
     		fprintf(stderr, "Error Writing to Socket");
-    	bzero(buffer,b_size);
+      	bzero(buffer,b_size);
 
     	//Receive File
     	int received_size;
