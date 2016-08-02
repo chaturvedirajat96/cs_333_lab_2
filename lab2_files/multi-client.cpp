@@ -47,13 +47,14 @@ void *client(void *attr_)
     	else file_n=0;
     	//Send Request
     	sscanf(buffer, "get files/foo%d.txt",&file_n);
+    	
     	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0);
     		fprintf(stderr, "Error Writing to Socket");
     	bzero(buffer,b_size);
 
     	//Receive File
     	int received_size;
-    	while(received_size = recv(sock_fd, buffer, 1024, 0)){
+    	while((received_size = recv(sock_fd, buffer, 1024, 0))>0){
  			//Discard recieved data
  			bzero(buffer, b_size);
     	}
