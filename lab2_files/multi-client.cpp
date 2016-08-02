@@ -60,8 +60,9 @@ void *client(void *attr_)
   	}
   	sleep(attr->sleep_time);
   	curr_t = time(NULL);
-    }
-    pthread_exit((void *)0);
+    close(sock_fd);
+  }
+  pthread_exit((void *)0);
 
 
 }
@@ -70,11 +71,10 @@ void *client(void *attr_)
 struct sockaddr_in set_server(struct sockaddr_in &server_addr, struct hostent *server, int &port_no)
 {
 	bzero((char *) &server_addr, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
-    server_addr.sin_port = htons(port_no);
-
-    return server_addr;
+  server_addr.sin_family = AF_INET;
+  bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
+  server_addr.sin_port = htons(port_no);
+  return server_addr;
 }    
 
 
