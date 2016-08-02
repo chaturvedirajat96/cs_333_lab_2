@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <unistd.h>
+#include <fstream>
 
 void error(char *msg)
 {
@@ -68,17 +69,36 @@ int main(int argc, char *argv[])
 			 n = read(newsockfd,buffer,255);
 			 if (n < 0) error("ERROR reading from socket");
 			 printf("Here is the message: %s\n",buffer);
+			 
+			 int i;
+			 for(i=0;i<255;i++) if(buffer[i]==' ') break;
+			 i++;
+			 char* filename = "";
+			 for(;i<255;i++) {if(buffer[i]=='.') break; filename+=buffer[i];}
+			 filename+=".txt";
+			 ifstream file = open(filename, ios::in);
+
+			 int length = 255;
+			 buffer = new char[length];
 
 			 /* send reply to client */
+			 while(file)
+			 {
+			 	file.read(buffer,length);
+			 	n = write(newsockfd,buffer,255);
+				if (n < 0) {error("ERROR writing to socket");break;}
+			 }
+			 close(newsockfd);
+			 return 0;
 
 			 //write_to_socket
-			 n = write(newsockfd,"I got your message",18);
-			 if (n < 0) error("ERROR writing to socket");
+			 //n = write(newsockfd,"I got your message",18);
+			 //if (n < 0) error("ERROR writing to socket");
 		  }
 		  else
 		  {
 		  	int status;
-		  	waitpid(-1,&status,WNOHANG);
+		  	while(waitpid(-1,&status,WNOHANG));
 		  }
 	  }
 	 return 0; 
