@@ -59,16 +59,15 @@ int main(int argc, char *argv[])
 		 listen(sockfd,5);
 		 clilen = sizeof(cli_addr);
 
-		 /* accept a new request, create a newsockfd */
-
-		 
-		 if (newsockfd < 0) 
-			  error("ERROR on accept");
 		  int ret = fork();
 		  if(ret==0)
 		  {
+			/* accept a new request, create a newsockfd */
+		 	 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen);
+			 if (newsockfd < 0) 
+				  error("ERROR on accept");
+		  
 			/* read message from client */
-		  	 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 			 bzero(buffer,256);
 			 n = read(newsockfd,buffer,255);
 			 if (n < 0) error("ERROR reading from socket");
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
 		  {
 		  	int status;
 		  	
-		  	while(waitpid(-1,&status,WNOHANG)){std::cout<<status<<endl;}
+		  	while(int i=waitpid(-1,&status,WNOHANG)){cout<<"Pid of process reaped : "<<i<<endl;}
 		  }
 	  }
 	 return 0; 
