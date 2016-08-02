@@ -8,6 +8,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <unistd.h>
+#include <string>
+#include <iostream>
 #include <fstream>
 
 using namespace std;
@@ -77,7 +79,7 @@ int main(int argc, char *argv[])
 			 i++;
 			 string filename = "";
 			 for(;i<255;i++) {if(buffer[i]=='.') break; filename+=buffer[i];}
-			 filename+=".txt";
+			 filename+=".txt";cout<<filename<<endl;
 			 ifstream file (filename, ios::in);
 			 if(file<0) {error("File not found");}
 
