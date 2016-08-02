@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
+#include <cstdlib>
+#include <string>
 #include <unistd.h>
 
 void error(char *msg)
@@ -15,7 +17,8 @@ void error(char *msg)
 
 int main(int argc, char *argv[])
 {
-	 int sockfd, newsockfd, portno, clilen;
+	 int sockfd, newsockfd, portno;
+	 socklen_t clilen;
 	 char buffer[256];
 	 struct sockaddr_in serv_addr, cli_addr;
 	 int n;
