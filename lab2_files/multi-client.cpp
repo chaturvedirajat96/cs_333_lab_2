@@ -53,9 +53,9 @@ void *client(void *attr_)
 
     	//Receive File
     	int received_size;
-    	while(1)
-    	{
-    		received_size = recv(sock_fd, buffer, 1024, 0);
+    	while(received_size = recv(sock_fd, buffer, 1024, 0)){
+ 			//Discard recieved data
+ 			bzero(buffer, b_size);
     	}
     	sleep(attr->sleep_time);
     	curr_t = time(NULL);
