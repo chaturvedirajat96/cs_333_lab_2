@@ -43,17 +43,21 @@ void *client(void *attr_)
 
 
   	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
-    pthread_exit((void *)-1);
+      pthread_exit((void *)-1);
     //connect to server
     if (connect(sock_fd,(struct sockaddr *)&attr->server_addr,sizeof(attr->server_addr)) < 0) 
-    pthread_exit((void *)-1);
+      pthread_exit((void *)-1);
   
     if(attr->mode){file_n = rand()%MAX_FILE_NO;}
   	else file_n=0;
   	//Send Request
   	sprintf(buffer, "get files/foo%d.txt",file_n);
   	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
-  		fprintf(stderr, "Error Writing to Socket");
+  	{
+        fprintf(stderr, "Error Writing to Socket");
+        close(sock_fd);
+        pthread_exit((void *)-2);
+    }
     else std::cout<<"Get Request Sent to Server\n";
     bzero(buffer,b_size);
 
@@ -90,8 +94,9 @@ int main(int argc, char *argv[])
 {	
 	//Arguments
 	if (argc < 7) {
-       fprintf(stderr,"usage %s <hostname> <port> <number of users> <duration> <Sleep Time> <mode>\n", argv[0]);
-       exit(0);
+       char err[256];
+       sprintf(err,"usage %s <hostname> <port> <number of users> <duration> <Sleep Time> <mode>\n", argv[0]);
+       error(err);
     }
     client_attr attr;
     //processing arguments
@@ -99,14 +104,13 @@ int main(int argc, char *argv[])
     attr.duration = atoi(argv[4]);
     attr.sleep_time = atoi(argv[5]);
     attr.mode = (strcmp(argv[6],"fixed"));
-	int port_no = atoi(argv[2]);
+	  int port_no = atoi(argv[2]);
     
     //Server info
     struct hostent *server = gethostbyname(argv[1]);
-    if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
-        exit(0);
-    }
+    if (server == NULL)
+        error("ERROR, no such host\n");
+
     //setup server
     set_server(attr.server_addr, server, port_no);
    

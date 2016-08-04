@@ -2,11 +2,13 @@
    The port number is passed as an argument */
 #include <cstdlib>
 #include <stdio.h>
+#include <signal.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <string>
 #include <iostream>
@@ -20,13 +22,26 @@ void error(string msg)
 	exit(1);
 }
 
-int main(int argc, char *argv[])
+void sig_handler(int signo)
 {
+	if(signo == SIGCHLD)
+	{
+		int status,pid;
+		cout<<"Received Signal\n";
+		while( (pid=waitpid(-1,&status,WNOHANG))>0 )
+			{cout<<"Pid of process reaped : "<<pid<<endl;}
+	}
+}
+
+int main(int argc, char *argv[])
+{	
+
 	 int sockfd, newsockfd, portno;
 	 socklen_t clilen;
 	 char buffer[256];
 	 struct sockaddr_in serv_addr, cli_addr;
 	 int n;
+	 
 	 if (argc < 2) {
 		 fprintf(stderr,"ERROR, no port provided\n");
 		 exit(1);
@@ -51,6 +66,10 @@ int main(int argc, char *argv[])
 	 if (bind(sockfd, (struct sockaddr *) &serv_addr,
 			  sizeof(serv_addr)) < 0) 
 			  error("ERROR on binding");
+
+	 //Registering the signal handler in kernel
+	 if (signal(SIGCHLD, sig_handler) == SIG_ERR)
+        fprintf(stderr,"Can't catch SIGCHLD signal");
 	 
 	 while(true)
 	 {
@@ -63,49 +82,64 @@ int main(int argc, char *argv[])
 		  if(ret==0)
 		  {
 			/* accept a new request, create a newsockfd */
-		 	 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen);
-			 if (newsockfd < 0) 
-				  error("ERROR on accept");
+		 	 
+			 if ( (newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen)) < 0) 
+				error("ERROR on accept \n");
 		  
 			/* read message from client */
 			 bzero(buffer,256);
-			 n = read(newsockfd,buffer,255);
-			 if (n < 0) error("ERROR reading from socket");
-			 printf("Here is the message: %s\n",buffer);
+			 if ( (n = read(newsockfd,buffer,255))<0) 
+			 {
+			 	close(newsockfd);
+			 	error("ERROR reading from socket");
+			 }
 			 
+			 printf("%s requested by client IP %s \n",buffer,inet_ntoa(cli_addr.sin_addr));
+			 
+			 //parsing request
 			 int i;
 			 for(i=0;i<255;i++) if(buffer[i]==' ') break;
 			 i++;
 			 string filename = "";
 			 for(;i<255;i++) {if(buffer[i]=='.') break; filename+=buffer[i];}
 			 filename+=".txt";
-			 cout<<filename<<endl;
-			 ifstream file (filename.c_str(), ios::in);
-			 if(file<0) {error("File not found");}
 
+			 //Reading the requested file
+			 ifstream file (filename.c_str(), ios::in);
+			 if(file<0) 
+		 	 {
+		 		close(newsockfd);
+		 		error("File not found");
+		 	 }
+
+			 //buffer for file content
 			 int length = 1024;
-			 char * buffer2 = new char [length];
+			 char buffer2[length];
 
 			 /* send reply to client */
 			 while(!file.eof())
 			 {
 			 	file.read(buffer2,length-1);
 			 	n = write(newsockfd,buffer2,strlen(buffer2));
-				if (n < 0) {error("ERROR writing to socket");break;}
+				if (n < 0) {
+					close(newsockfd);
+					error("ERROR writing to socket");
+				}
 			 }
-			 std::cout<<"File Transfer Completed\n";
+
+			 printf("File Transfer Completed to Client IP %s\n",inet_ntoa(cli_addr.sin_addr));
+			 //cleanup
+			 file.close();
+
+			 //Close Socket
 			 close(newsockfd);
 			 return 0;
 
-			 //write_to_socket
-			 //n = write(newsockfd,"I got your message",18);
-			 //if (n < 0) error("ERROR writing to socket");
 		  }
 		  else
 		  {
-		  	int status;
-		  	
-		  	while(int i=waitpid(-1,&status,WNOHANG)){cout<<"Pid of process reaped : "<<i<<endl;}
+		  	int status,pid;
+		  	while( (pid=waitpid(-1,&status,WNOHANG))>0 ){cout<<"Pid of process reaped : "<<pid<<endl;}
 		  }
 	  }
 	 return 0; 
