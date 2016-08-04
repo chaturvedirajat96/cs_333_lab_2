@@ -61,14 +61,19 @@ void *client(void *attr_)
     else std::cout<<"Get Request Sent to Server\n";
     bzero(buffer,b_size);
 
-    int received_size;
+    int received_size=0,curr_size;
 	//Receive File
-  	while((received_size=read(sock_fd, buffer, 1023)>0)){
+  	while((curr_size=read(sock_fd, buffer, 1023)>0)){
 			//Discard recieved data		
+      received_size+=curr_size;
   	}
-  	std::cout<<"File Received\n";
+  	if(received_size!=0)std::cout<<"File Received\n";
+    else fprintf(stderr, "Requested File could not be served by server\n");
+
+    //Sleep and request again after sleep time
   	sleep(attr->sleep_time);
-  	curr_t = time(NULL);
+  	//Time elapsed 
+    curr_t = time(NULL);
     diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
     close(sock_fd);
   }

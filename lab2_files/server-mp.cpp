@@ -75,17 +75,16 @@ int main(int argc, char *argv[])
 	 {
 		 /* listen for incoming connection requests */
 
-		 listen(sockfd,5);
-		 clilen = sizeof(cli_addr);
-
+		  listen(sockfd,5);
+		  clilen = sizeof(cli_addr);
+		  /* accept a new request, create a newsockfd */
+		  if ( (newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen)) < 0) 
+				error("ERROR on accept \n");
+		  
 		  int ret = fork();
 		  if(ret==0)
 		  {
-			/* accept a new request, create a newsockfd */
-		 	 
-			 if ( (newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen)) < 0) 
-				error("ERROR on accept \n");
-		  
+			
 			/* read message from client */
 			 bzero(buffer,256);
 			 if ( (n = read(newsockfd,buffer,255))<0) 
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
 
 			 //Reading the requested file
 			 ifstream file (filename.c_str(), ios::in);
-			 if(file<0) 
+			 if(file.fail()) 
 		 	 {
 		 		close(newsockfd);
 		 		error("File not found");
@@ -137,9 +136,8 @@ int main(int argc, char *argv[])
 
 		  }
 		  else
-		  {
-		  	int status,pid;
-		  	while( (pid=waitpid(-1,&status,WNOHANG))>0 ){cout<<"Pid of process reaped : "<<pid<<endl;}
+		  {	
+		  	close(newsockfd);
 		  }
 	  }
 	 return 0; 
