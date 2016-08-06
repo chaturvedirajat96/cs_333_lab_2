@@ -11,6 +11,7 @@
 #include <iostream>
 
 #define MAX_FILE_NO 10000;
+
 void error(char *msg)
 {
     perror(msg);
@@ -24,14 +25,15 @@ struct client_attr
 	float sleep_time;
 	bool mode;
 	
-};
+}attr;
 
-int count_req = 0;
 
-void *client(void *attr_)
+void *client(void *count)
 {	
-	client_attr *attr = (client_attr *)attr_;
-	int sock_fd;
+
+  int *count_req = (int *)count;
+  
+  int sock_fd;
 	//open socket
 	     
   //Read and Write to Socket
@@ -40,29 +42,28 @@ void *client(void *attr_)
   int num_b, diff_time, file_n;
   time_t start_t = time(NULL),curr_t = time(NULL);
   diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
-  while(attr->duration > diff_time )
+  while(attr.duration > diff_time )
   {	
 
 
   	if((sock_fd = socket(AF_INET, SOCK_STREAM, 0) )< 0)
       pthread_exit((void *)-1);
     //connect to server
-    if (connect(sock_fd,(struct sockaddr *)&attr->server_addr,sizeof(attr->server_addr)) < 0) 
+    if (connect(sock_fd,(struct sockaddr *)&attr.server_addr,sizeof(attr.server_addr)) < 0) 
       pthread_exit((void *)-1);
   
-    if(attr->mode){file_n = rand()%MAX_FILE_NO;}
+    if(attr.mode){file_n = rand()%MAX_FILE_NO;}
   	else file_n=0;
   	//Send Request
   	sprintf(buffer, "get files/foo%d.txt",file_n);
   	if( ( num_b = write(sock_fd, buffer, strlen(buffer)) ) < 0)
   	{
-        fprintf(stderr, "Error Writing to Socket");
+        //fprintf(stderr, "Error Writing to Socket");
         close(sock_fd);
         pthread_exit((void *)-2);
     }
     else {
-    	std::cout<<"Get Request Sent to Server\n";
-    count_req++;
+    	//std::cout<<"Get Request Sent to Server\n";
 	}
     bzero(buffer,b_size);
 
@@ -72,11 +73,15 @@ void *client(void *attr_)
 			//Discard recieved data		
       received_size+=curr_size;
   	}
-  	if(received_size!=0)std::cout<<"File Received\n";
+  	if(received_size!=0){
+  		//std::cout<<"File Received\n";
+  		(*count_req)++;
+  		
+  	}
     else fprintf(stderr, "Requested File could not be served by server\n");
 
     //Sleep and request again after sleep time
-  	sleep(attr->sleep_time);
+  	usleep(attr.sleep_time*1000000);
   	//Time elapsed 
     curr_t = time(NULL);
     diff_time = (int) ((curr_t - start_t)*1000.0)/(CLOCKS_PER_SEC/1000);
@@ -105,19 +110,23 @@ int main(int argc, char *argv[])
 	//Arguments
 	time_t start, end;
 	start = time(NULL);
+
 	if (argc < 7) {
        char err[256];
        sprintf(err,"usage %s <hostname> <port> <number of users> <duration> <Sleep Time> <mode>\n", argv[0]);
        error(err);
     }
-    client_attr attr;
+
+    
     //processing arguments
     int num_of_threads = atoi(argv[3]);
     attr.duration = atoi(argv[4]);
     attr.sleep_time = atoi(argv[5]);
     attr.mode = (strcmp(argv[6],"fixed"));
-	  int port_no = atoi(argv[2]);
+	int port_no = atoi(argv[2]);
     
+    //Count Requests
+    int count_req[num_of_threads];
     //Server info
     struct hostent *server = gethostbyname(argv[1]);
     if (server == NULL)
@@ -131,10 +140,9 @@ int main(int argc, char *argv[])
    	int error_th;
    	for(int i = 0;i<num_of_threads;i++)
    	{
-   		if( (error_th=pthread_create(&threads[i], NULL, client, &attr)) < 0)
+   		if( (error_th=pthread_create(&threads[i], NULL, client, &count_req[i])) < 0)
    			fprintf(stderr,"Error Creating Thread %d\n",i);
    	}
-
    	// free attribute and wait for the other threads
    	//Join threads
    	void *status;
@@ -146,7 +154,13 @@ int main(int argc, char *argv[])
    	}
    	end = time(NULL);
    	float diff_tim =  (int) ((end - start)*1000.0)/(CLOCKS_PER_SEC/1000);
-   	float throughput = (float)count_req/diff_tim;
+   	//Calculate throughput
+   	float throughput =0;
+   	for(int i = 0;i<num_of_threads;i++)
+   	{
+   		throughput+=count_req[i];
+   	}
+   	throughput/=(diff_tim);
    	std::cout<<"\n"<<throughput<<"\n";
 
     return 0;

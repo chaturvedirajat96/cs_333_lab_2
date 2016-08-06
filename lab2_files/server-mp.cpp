@@ -14,6 +14,8 @@
 #include <iostream>
 #include <fstream>
 
+#define BACK_LOG 50
+
 using namespace std;
 
 void error(string msg)
@@ -27,9 +29,10 @@ void sig_handler(int signo)
 	if(signo == SIGCHLD)
 	{
 		int status,pid;
-		cout<<"Received Signal\n";
+		//cout<<"Received Signal\n";
 		while( (pid=waitpid(-1,&status,WNOHANG))>0 )
-			{cout<<"Pid of process reaped : "<<pid<<endl;}
+			{//cout<<"Pid of process reaped : "<<pid<<endl;
+	}
 	}
 }
 
@@ -75,7 +78,7 @@ int main(int argc, char *argv[])
 	 {
 		 /* listen for incoming connection requests */
 
-		  listen(sockfd,5);
+		  listen(sockfd, BACK_LOG);
 		  clilen = sizeof(cli_addr);
 		  /* accept a new request, create a newsockfd */
 		  if ( (newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,&clilen)) < 0) 
@@ -93,7 +96,7 @@ int main(int argc, char *argv[])
 			 	error("ERROR reading from socket");
 			 }
 			 
-			 printf("%s requested by client IP %s \n",buffer,inet_ntoa(cli_addr.sin_addr));
+			 //printf("%s requested by client IP %s \n",buffer,inet_ntoa(cli_addr.sin_addr));
 			 
 			 //parsing request
 			 int i;
@@ -126,7 +129,7 @@ int main(int argc, char *argv[])
 				}
 			 }
 
-			 printf("File Transfer Completed to Client IP %s\n",inet_ntoa(cli_addr.sin_addr));
+			 //printf("File Transfer Completed to Client IP %s\n",inet_ntoa(cli_addr.sin_addr));
 			 //cleanup
 			 file.close();
 
