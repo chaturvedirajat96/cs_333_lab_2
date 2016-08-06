@@ -26,6 +26,8 @@ struct client_attr
 	
 };
 
+int count_req = 0;
+
 void *client(void *attr_)
 {	
 	client_attr *attr = (client_attr *)attr_;
@@ -58,7 +60,10 @@ void *client(void *attr_)
         close(sock_fd);
         pthread_exit((void *)-2);
     }
-    else std::cout<<"Get Request Sent to Server\n";
+    else {
+    	std::cout<<"Get Request Sent to Server\n";
+    count_req++;
+	}
     bzero(buffer,b_size);
 
     int received_size=0,curr_size;
@@ -98,6 +103,8 @@ struct sockaddr_in set_server(struct sockaddr_in &server_addr, struct hostent *s
 int main(int argc, char *argv[])
 {	
 	//Arguments
+	time_t start, end;
+	start = time(NULL);
 	if (argc < 7) {
        char err[256];
        sprintf(err,"usage %s <hostname> <port> <number of users> <duration> <Sleep Time> <mode>\n", argv[0]);
@@ -137,6 +144,10 @@ int main(int argc, char *argv[])
    		if( (rthread = pthread_join(threads[i], &status) < 0) )
    			fprintf(stderr,"Error Joining thread %d \n",i);
    	}
+   	end = time(NULL);
+   	float diff_tim =  (int) ((end - start)*1000.0)/(CLOCKS_PER_SEC/1000);
+   	float throughput = (float)count_req/diff_tim;
+   	std::cout<<"\n"<<throughput<<"\n";
 
     return 0;
 }
