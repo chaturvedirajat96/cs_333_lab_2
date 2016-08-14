@@ -24,12 +24,14 @@ void error(string msg)
 	exit(1);
 }
 
+//signal handler (signal send by child when it exits)
 void sig_handler(int signo)
 {
 	if(signo == SIGCHLD)
 	{
 		int status,pid;
 		//cout<<"Received Signal\n";
+		//reap all zombie child with nonblocking wait pid
 		while( (pid=waitpid(-1,&status,WNOHANG))>0 )
 			{//cout<<"Pid of process reaped : "<<pid<<endl;
 	}
@@ -38,7 +40,7 @@ void sig_handler(int signo)
 
 int main(int argc, char *argv[])
 {	
-
+	 //socket related vars
 	 int sockfd, newsockfd, portno;
 	 socklen_t clilen;
 	 char buffer[256];
@@ -91,7 +93,8 @@ int main(int argc, char *argv[])
 			/* read message from client */
 			 bzero(buffer,256);
 			 if ( (n = read(newsockfd,buffer,255))<0) 
-			 {
+			 {	
+			 	//close on failure
 			 	close(newsockfd);
 			 	error("ERROR reading from socket");
 			 }
@@ -118,7 +121,7 @@ int main(int argc, char *argv[])
 			 int length = 1024;
 			 char buffer2[length];
 
-			 /* send reply to client */
+			 /* send reply to client */ //the requested file is being written in socket
 			 while(!file.eof())
 			 {
 			 	file.read(buffer2,length-1);
